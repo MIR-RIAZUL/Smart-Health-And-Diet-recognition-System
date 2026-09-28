@@ -221,6 +221,22 @@ CREATE TABLE IF NOT EXISTS `resources` (
     FOREIGN KEY (`dietitian_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ------------------------------------------------------
+-- 14. Dietitian Assignments Table (Admin assigns User to Dietitian)
+-- ------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `dietitian_assignments` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` INT NOT NULL UNIQUE,
+    `dietitian_id` INT NOT NULL,
+    `assigned_by` INT NOT NULL,
+    `assigned_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `notes` TEXT NULL,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`dietitian_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`assigned_by`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    INDEX `idx_dietitian_user` (`dietitian_id`, `user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ======================================================
 -- Initial Seed Data: Admin, Approved Dietitian, Pending Dietitian, Regular User
 -- Passwords:

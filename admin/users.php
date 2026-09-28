@@ -42,11 +42,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $del = $pdo->prepare("DELETE FROM users WHERE id = :id AND role != 'admin'");
         $del->execute(['id' => $targetUserId]);
         setFlashMessage('success', "User account has been permanently removed.");
+    } elseif ($action === 'assign_dietitian') {
+        $dietitianId = (int)($_POST['dietitian_id'] ?? 0);
+        $notes = trim($_POST['notes'] ?? '');
+
+        if ($dietitianId <= 0) {
+            // Unassign
+            $unassign = $pdo->prepare("DELETE FROM dietitian_assignments WHERE user_id = :uid");
+            $unassign->execute(['uid' => $targetUserId]);
+            setFlashMessage('success', "Dietitian assignment removed for this user.");
+        } else {
+            // Verify dietitian exists and is active
+            $check = $pdo->prepare("SELECT name FROM users WHERE id = :did AND role = 'dietitian' AND status = 'active' LIMIT 1");
+            $check->execute(['did' => $dietitianId]);
+            $dietitianName = $check->fetchColumn();
+
+            if ($dietitianName) {
+                $assign = $pdo->prepare("
+                    INSERT INTO dietitian_assignments (user_id, dietitian_id, assigned_by, notes, assigned_at)
+                    VALUES (:uid, :did, :aid, :notes, NOW())
+                    ON DUPLICATE KEY UPDATE 
+                        dietitian_id = VALUES(dietitian_id),
+                        assigned_by = VALUES(assigned_by),
+                        notes = VALUES(notes),
+                        assigned_at = NOW()
+                ");
+                $assign->execute([
+                    'uid'   => $targetUserId,
+                    'did'   => $dietitianId,
+                    'aid'   => (int)$currentUser['id'],
+                    'notes' => $notes
+                ]);
+                setFlashMessage('success', "User successfully assigned to Dietitian {$dietitianName}.");
+            } else {
+                setFlashMessage('error', "Invalid or inactive dietitian selected.");
+            }
+        }
     }
 
     header('Location: users.php');
     exit;
 }
+
+// Fetch approved active dietitians for assignment dropdown
+$dietitiansList = $pdo->query("
+    SELECT u.id, u.name, u.email, dp.specialization, dp.qualification 
+    FROM users u 
+    JOIN dietitian_profiles dp ON u.id = dp.user_id 
+    WHERE u.role = 'dietitian' AND u.status = 'active' AND dp.approval_status = 'approved'
+    ORDER BY u.name ASC
+")->fetchAll();
 
 // Search and filter parameters
 $search = trim($_GET['search'] ?? '');
@@ -54,15 +99,20 @@ $statusFilter = trim($_GET['status'] ?? 'all');
 
 $query = "
     SELECT u.id, u.name, u.email, u.phone, u.role, u.status, u.created_at,
-           h.age, h.gender, h.height, h.weight, h.bmi, h.health_goal, h.daily_calorie_target
+           h.age, h.gender, h.height, h.weight, h.bmi, h.health_goal, h.daily_calorie_target,
+           da.dietitian_id as assigned_dietitian_id, da.notes as assignment_notes, da.assigned_at,
+           d.name as dietitian_name, dp.specialization as dietitian_specialization
     FROM users u 
     LEFT JOIN health_profiles h ON u.id = h.user_id 
+    LEFT JOIN dietitian_assignments da ON u.id = da.user_id
+    LEFT JOIN users d ON da.dietitian_id = d.id
+    LEFT JOIN dietitian_profiles dp ON d.id = dp.user_id
     WHERE 1=1
 ";
 $params = [];
 
 if (!empty($search)) {
-    $query .= " AND (u.name LIKE :search OR u.email LIKE :search OR u.phone LIKE :search)";
+    $query .= " AND (u.name LIKE :search OR u.email LIKE :search OR u.phone LIKE :search OR d.name LIKE :search)";
     $params['search'] = "%{$search}%";
 }
 
@@ -158,6 +208,7 @@ $currentPage = 'users';
                                 <th>USER</th>
                                 <th>ROLE</th>
                                 <th>GOAL / STATS</th>
+                                <th>ASSIGNED DIETITIAN</th>
                                 <th class="text-right">BMI</th>
                                 <th class="text-center">STATUS</th>
                                 <th class="text-right">REGISTERED</th>
@@ -167,7 +218,7 @@ $currentPage = 'users';
                         <tbody>
                             <?php if (empty($usersList)): ?>
                                 <tr>
-                                    <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                    <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
                                         No users matched your search criteria.
                                     </td>
                                 </tr>
@@ -193,6 +244,29 @@ $currentPage = 'users';
                                         <td class="text-muted" style="font-size: 13px;">
                                             <?= e(ucwords(str_replace('_', ' ', $u['health_goal'] ?? 'General health'))) ?>
                                         </td>
+                                        <td>
+                                            <?php if ($u['role'] === 'user'): ?>
+                                                <?php if (!empty($u['assigned_dietitian_id'])): ?>
+                                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                                        <span style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; background: rgba(52, 152, 219, 0.15); border: 1px solid rgba(52, 152, 219, 0.3); border-radius: 20px; font-size: 12px; color: #3498db; font-weight: 500;">
+                                                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                                            <?= e($u['dietitian_name']) ?>
+                                                        </span>
+                                                        <button type="button" class="action-btn" title="Reassign Dietitian" style="background: none; border: none; padding: 2px; color: #8c909a; cursor: pointer;"
+                                                                onclick="openAssignModal(<?= (int)$u['id'] ?>, '<?= htmlspecialchars(addslashes($u['name']), ENT_QUOTES) ?>', <?= (int)$u['assigned_dietitian_id'] ?>, '<?= htmlspecialchars(addslashes($u['assignment_notes'] ?? ''), ENT_QUOTES) ?>')">
+                                                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                        </button>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <button type="button" class="action-pill pill-orange" style="font-size: 11px; padding: 4px 10px; border: none; cursor: pointer;"
+                                                            onclick="openAssignModal(<?= (int)$u['id'] ?>, '<?= htmlspecialchars(addslashes($u['name']), ENT_QUOTES) ?>', 0, '')">
+                                                        + Assign Dietitian
+                                                    </button>
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <span style="color: #606470; font-size: 12px;">--</span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td class="text-right font-bold" style="color: var(--text-light);">
                                             <?= $u['bmi'] ? number_format($u['bmi'], 1) : '--' ?>
                                         </td>
@@ -207,6 +281,14 @@ $currentPage = 'users';
                                         <td class="text-right">
                                             <div class="action-buttons" style="display: inline-flex; gap: 8px;">
                                                 
+                                                <?php if ($u['role'] === 'user'): ?>
+                                                    <!-- Assign Dietitian Button -->
+                                                    <button type="button" class="action-btn" title="Assign / Reassign Dietitian" style="color: #3498db; background: rgba(52, 152, 219, 0.1);"
+                                                            onclick="openAssignModal(<?= (int)$u['id'] ?>, '<?= htmlspecialchars(addslashes($u['name']), ENT_QUOTES) ?>', <?= (int)($u['assigned_dietitian_id'] ?? 0) ?>, '<?= htmlspecialchars(addslashes($u['assignment_notes'] ?? ''), ENT_QUOTES) ?>')">
+                                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                                                    </button>
+                                                <?php endif; ?>
+
                                                 <!-- View User Details Modal Trigger -->
                                                 <button type="button" class="action-btn view-btn" title="View Details" 
                                                         onclick="openUserModal(<?= htmlspecialchars(json_encode($u), ENT_QUOTES, 'UTF-8') ?>)">
@@ -301,6 +383,47 @@ $currentPage = 'users';
         </div>
     </div>
 
+    <!-- Assign Dietitian Modal -->
+    <div id="assignModal" class="details-modal">
+        <div class="modal-box" style="max-width: 520px;">
+            <div class="modal-top">
+                <div class="modal-titles">
+                    <h2 id="assignModalTitle">Assign Dietitian</h2>
+                    <p id="assignModalSubtitle">Designate a clinical nutritionist to guide this user</p>
+                </div>
+                <button type="button" class="close-btn" onclick="closeAssignModal()">&times;</button>
+            </div>
+
+            <form method="POST" action="users.php">
+                <input type="hidden" name="csrf_token" value="<?= getCSRFToken() ?>">
+                <input type="hidden" name="action" value="assign_dietitian">
+                <input type="hidden" name="user_id" id="assignUserId" value="0">
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Select Dietitian *</label>
+                    <select id="dietitianSelect" name="dietitian_id" style="width: 100%; padding: 12px 14px; background: #111419; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-light); font-size: 14px;" required>
+                        <option value="0">-- Unassigned (Remove Assignment) --</option>
+                        <?php foreach ($dietitiansList as $dt): ?>
+                            <option value="<?= (int)$dt['id'] ?>">
+                                <?= e($dt['name']) ?> (<?= e($dt['specialization'] ?: 'General Nutrition') ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Clinical Focus / Assignment Notes (Optional)</label>
+                    <textarea id="assignmentNotes" name="notes" rows="3" placeholder="e.g. Focus on high-protein meal planning, weight loss target of 70kg, monitor daily hydration..." style="width: 100%; padding: 12px 14px; background: #111419; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-light); font-size: 14px; resize: vertical;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="filter-btn" onclick="closeAssignModal()" style="border: 1px solid var(--border-color);">Cancel</button>
+                    <button type="submit" class="primary-btn" style="margin-bottom: 0; width: auto; padding: 10px 24px;">Save Assignment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         function openUserModal(user) {
             document.getElementById('modalUserName').innerText = user.name;
@@ -318,6 +441,19 @@ $currentPage = 'users';
 
         function closeUserModal() {
             document.getElementById('userModal').classList.remove('active');
+        }
+
+        function openAssignModal(userId, userName, currentDietitianId, notes) {
+            document.getElementById('assignUserId').value = userId;
+            document.getElementById('assignModalTitle').innerText = 'Assign Dietitian: ' + userName;
+            document.getElementById('assignModalSubtitle').innerText = 'Select a qualified practitioner to guide ' + userName;
+            document.getElementById('dietitianSelect').value = currentDietitianId || 0;
+            document.getElementById('assignmentNotes').value = notes || '';
+            document.getElementById('assignModal').classList.add('active');
+        }
+
+        function closeAssignModal() {
+            document.getElementById('assignModal').classList.remove('active');
         }
     </script>
 </body>

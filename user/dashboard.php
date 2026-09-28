@@ -61,6 +61,18 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute(['uid' => $userId]);
 $latestRecommendation = $stmt->fetch();
+
+// Assigned dietitian details
+$stmt = $pdo->prepare("
+    SELECT u.name as dietitian_name, u.email as dietitian_email, dp.specialization, dp.qualification
+    FROM dietitian_assignments da
+    JOIN users u ON da.dietitian_id = u.id
+    LEFT JOIN dietitian_profiles dp ON u.id = dp.user_id
+    WHERE da.user_id = :uid
+    LIMIT 1
+");
+$stmt->execute(['uid' => $userId]);
+$assignedDietitian = $stmt->fetch();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -95,6 +107,10 @@ $latestRecommendation = $stmt->fetch();
                 <a href="health-info.php" class="nav-link">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
                     Health Information
+                </a>
+                <a href="guidance.php" class="nav-link">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                    Dietitian Guidance
                 </a>
                 <a href="../log-meals.html" class="nav-link">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
@@ -213,22 +229,49 @@ $latestRecommendation = $stmt->fetch();
                         
                         <!-- Dietitian Card -->
                         <div class="panel-card" style="padding: 20px;">
-                            <h4 style="font-size: 15px; font-weight: 600; color: var(--text-light); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#2ecc71" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                                Dietitian Guidance
-                            </h4>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <h4 style="font-size: 15px; font-weight: 600; color: var(--text-light); margin: 0; display: flex; align-items: center; gap: 8px;">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#2ecc71" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                    Dietitian Guidance
+                                </h4>
+                                <a href="guidance.php" style="font-size: 12px; color: var(--primary-orange); text-decoration: none; font-weight: 600;">View All &rarr;</a>
+                            </div>
+
+                            <?php if ($assignedDietitian): ?>
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                                    <div class="avatar avatar-blue" style="width: 32px; height: 32px; font-size: 12px; border-radius: 50%;">
+                                        <?= strtoupper(substr($assignedDietitian['dietitian_name'], 0, 2)) ?>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 13px; font-weight: 600; color: #ffffff;">Dr. <?= e($assignedDietitian['dietitian_name']) ?></div>
+                                        <div style="font-size: 11px; color: #3498db;"><?= e($assignedDietitian['specialization'] ?: 'Clinical Dietitian') ?></div>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                <div style="margin-bottom: 10px; font-size: 12px; color: var(--text-muted);">
+                                    <em>Personal dietitian assignment in progress</em>
+                                </div>
+                            <?php endif; ?>
+
                             <?php if ($latestRecommendation): ?>
-                                <p style="font-size: 13px; color: #b0b4bd; line-height: 1.5; margin-bottom: 10px;">
+                                <div style="font-size: 13px; font-weight: 600; color: var(--primary-orange); margin-bottom: 4px;">
+                                    <?= e($latestRecommendation['title']) ?>
+                                </div>
+                                <p style="font-size: 13px; color: #b0b4bd; line-height: 1.5; margin: 0 0 10px 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
                                     "<?= e($latestRecommendation['recommendation']) ?>"
                                 </p>
                                 <div style="font-size: 11px; color: var(--text-muted); text-align: right;">
-                                    — Dr. <?= e($latestRecommendation['dietitian_name']) ?>
+                                    — Dr. <?= e($latestRecommendation['dietitian_name']) ?> • <?= date('M d', strtotime($latestRecommendation['created_at'])) ?>
                                 </div>
                             <?php else: ?>
-                                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
-                                    Maintain healthy hydration and balanced protein with each meal. Your assigned nutritionist will review your vitals weekly.
+                                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0 0 10px 0;">
+                                    Your dietitian will review your daily food logs and target calories to issue personalized dietary recommendations.
                                 </p>
                             <?php endif; ?>
+                            
+                            <a href="guidance.php" class="btn-secondary" style="display: block; text-align: center; font-size: 12px; padding: 7px 12px; margin-top: 12px; text-decoration: none; border-radius: 6px;">
+                                View Full Guidance History
+                            </a>
                         </div>
 
                         <!-- Sleep & Recovery Box -->

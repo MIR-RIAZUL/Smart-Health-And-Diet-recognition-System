@@ -70,9 +70,11 @@ $statusFilter = trim($_GET['status'] ?? 'all');
 $search = trim($_GET['search'] ?? '');
 
 $query = "
-    SELECT dp.*, u.name, u.email, u.phone, u.status as user_status, u.created_at as registered_at
+    SELECT dp.*, u.name, u.email, u.phone, u.status as user_status, u.created_at as registered_at,
+           COALESCE(da.patient_count, 0) as patient_count
     FROM dietitian_profiles dp
     JOIN users u ON dp.user_id = u.id
+    LEFT JOIN (SELECT dietitian_id, COUNT(*) as patient_count FROM dietitian_assignments GROUP BY dietitian_id) da ON dp.user_id = da.dietitian_id
     WHERE 1=1
 ";
 $params = [];
@@ -218,8 +220,10 @@ $currentPage = 'dietitians';
                                         <span class="detail-val"><?= e($d['certification'] ?? 'Licensed Dietitian') ?></span>
                                     </div>
                                     <div class="detail-box">
-                                        <span class="detail-label">Application Date</span>
-                                        <span class="detail-val"><?= date('M d, Y', strtotime($d['created_at'])) ?></span>
+                                        <span class="detail-label">Assigned Patients</span>
+                                        <span class="detail-val" style="color: #3498db; font-weight: 600;">
+                                            <?= (int)$d['patient_count'] ?> active
+                                        </span>
                                     </div>
                                 </div>
 
