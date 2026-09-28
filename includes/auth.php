@@ -122,8 +122,13 @@ function redirectByRole(string $role): void {
  * @param array $user
  */
 function loginUser(array $user): void {
-    // Regenerate session ID to prevent session fixation
-    session_regenerate_id(true);
+    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+        session_start();
+    }
+    // Regenerate session ID to prevent session fixation if session is active
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_regenerate_id(true);
+    }
 
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['user_name'] = $user['name'];
@@ -135,13 +140,13 @@ function loginUser(array $user): void {
  * Log out user and destroy session safely.
  */
 function logoutUser(): void {
-    if (session_status() === PHP_SESSION_NONE) {
+    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         session_start();
     }
 
     $_SESSION = [];
 
-    if (ini_get("session.use_cookies")) {
+    if (ini_get("session.use_cookies") && !headers_sent()) {
         $params = session_get_cookie_params();
         setcookie(
             session_name(),
@@ -154,5 +159,8 @@ function logoutUser(): void {
         );
     }
 
-    session_destroy();
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_destroy();
+    }
 }
+

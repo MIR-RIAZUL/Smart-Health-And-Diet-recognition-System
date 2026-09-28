@@ -4,137 +4,236 @@ require_once __DIR__ . '/../includes/auth.php';
 
 requireRole('admin');
 $currentUser = getCurrentUser();
-
 $pdo = getDBConnection();
 
-// Fetch key admin portal metrics
+// Summary metrics
 $totalUsers = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE role = 'user'")->fetchColumn();
 $totalDietitians = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE role = 'dietitian'")->fetchColumn();
 $pendingDietitians = (int)$pdo->query("SELECT COUNT(*) FROM dietitian_profiles WHERE approval_status = 'pending'")->fetchColumn();
 $totalFoods = (int)$pdo->query("SELECT COUNT(*) FROM food_items")->fetchColumn();
+$totalMealPlans = (int)$pdo->query("SELECT COUNT(*) FROM meal_plans")->fetchColumn();
+$totalAccounts = (int)$pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+
+// Recent Activity Data
+$recentUsers = $pdo->query("
+    SELECT u.id, u.name, u.email, u.status, u.created_at, h.health_goal, h.bmi 
+    FROM users u 
+    LEFT JOIN health_profiles h ON u.id = h.user_id 
+    WHERE u.role = 'user' 
+    ORDER BY u.created_at DESC 
+    LIMIT 4
+")->fetchAll();
+
+$recentDietitians = $pdo->query("
+    SELECT u.id, u.name, u.email, dp.specialization, dp.qualification, dp.approval_status, dp.created_at 
+    FROM dietitian_profiles dp 
+    JOIN users u ON dp.user_id = u.id 
+    ORDER BY dp.created_at DESC 
+    LIMIT 4
+")->fetchAll();
+
+$recentPlans = $pdo->query("
+    SELECT mp.id, mp.title, mp.goal, mp.status, mp.created_at, 
+           u_patient.name as patient_name, u_diet.name as dietitian_name
+    FROM meal_plans mp 
+    JOIN users u_patient ON mp.user_id = u_patient.id 
+    JOIN users u_diet ON mp.dietitian_id = u_diet.id 
+    ORDER BY mp.created_at DESC 
+    LIMIT 4
+")->fetchAll();
+
+$currentPage = 'dashboard';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Health Track - Admin Portal</title>
+    <title>Health Track - Admin Dashboard</title>
     <link rel="stylesheet" href="../dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="dashboard-layout">
         
-        <!-- Admin Sidebar Navigation -->
-        <aside class="sidebar admin-sidebar">
-            <div class="sidebar-header">
-                <div class="logo-container small-logo admin-logo">
-                    <div class="filled-heart-icon">
-                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                    </div>
-                    <span class="logo-text-small">Health Track Admin</span>
-                </div>
-            </div>
-
-            <nav class="sidebar-nav admin-nav">
-                <a href="dashboard.php" class="nav-link admin-nav-link active" style="color: var(--primary-orange);">
-                    Dashboard Overview
-                </a>
-                <a href="../admin-manage-users.html" class="nav-link admin-nav-link">
-                    Manage Users (<?= $totalUsers ?>)
-                </a>
-                <a href="../admin-approve-dietitians.html" class="nav-link admin-nav-link">
-                    Approve Dietitians <?php if ($pendingDietitians > 0): ?><span style="background-color: #f39c12; color: #111419; font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 700; margin-left: 6px;"><?= $pendingDietitians ?></span><?php endif; ?>
-                </a>
-                <a href="#" class="nav-link admin-nav-link">
-                    Food Database (<?= $totalFoods ?>)
-                </a>
-                <a href="../admin-generate-reports.html" class="nav-link admin-nav-link">
-                    Generate Reports
-                </a>
-            </nav>
-
-            <div class="sidebar-footer" style="margin-top: auto; padding: 20px 30px; border-top: 1px solid var(--sidebar-border);">
-                <div style="font-size: 13px; color: var(--text-light); font-weight: 600; margin-bottom: 4px;"><?= e($currentUser['name']) ?></div>
-                <div style="font-size: 12px; color: #2ecc71; margin-bottom: 16px;">Super Administrator</div>
-                <a href="../logout.php" class="nav-link sign-out" style="padding: 0; display: flex; align-items: center; gap: 8px;">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                        <polyline points="16 17 21 12 16 7"></polyline>
-                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                    </svg>
-                    Sign Out
-                </a>
-            </div>
-        </aside>
+        <?php include __DIR__ . '/sidebar.php'; ?>
 
         <!-- Main Content Area -->
-        <main class="main-content admin-main-hub">
-            <div style="width: 100%; max-width: 900px;">
+        <main class="main-content" style="overflow-y: auto;">
+            <header class="top-header" style="justify-content: space-between;">
+                <div>
+                    <h1 class="header-title" style="font-size: 22px;">Administrator Dashboard</h1>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">System oversight, access controls, and dietetics administration</p>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <span class="status-badge status-active">System Online</span>
+                </div>
+            </header>
+
+            <div class="content-wrapper" style="max-width: 1300px; padding: 30px 40px;">
                 <?php renderFlashMessage(); ?>
 
-                <div class="admin-dashboard-grid">
+                <!-- Top Metric KPI Grid (6 Summary Cards) -->
+                <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 30px;">
                     
-                    <!-- Manage Users Card -->
-                    <a href="../admin-manage-users.html" class="admin-hub-card card-manage">
-                        <div class="icon-wrapper icon-green">
-                            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="9" cy="7" r="4"></circle>
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                            </svg>
+                    <a href="users.php" style="text-decoration: none;">
+                        <div class="summary-card" style="padding: 20px 16px; border: 1px solid transparent; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <div class="summary-value text-green" style="font-size: 26px;"><?= $totalUsers ?></div>
+                            <div class="summary-label" style="font-size: 13px; margin-top: 4px;">Total Users</div>
                         </div>
-                        <h3>Manage Users</h3>
-                        <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;"><?= $totalUsers ?> registered users</p>
                     </a>
 
-                    <!-- Approve Dietitians Card -->
-                    <a href="../admin-approve-dietitians.html" class="admin-hub-card card-approve">
-                        <div class="icon-wrapper icon-blue">
-                            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-                                <polyline points="16 11 18 13 22 9"></polyline>
-                            </svg>
+                    <a href="dietitians.php" style="text-decoration: none;">
+                        <div class="summary-card" style="padding: 20px 16px; border: 1px solid transparent; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <div class="summary-value text-blue" style="font-size: 26px;"><?= $totalDietitians ?></div>
+                            <div class="summary-label" style="font-size: 13px; margin-top: 4px;">Total Dietitians</div>
                         </div>
-                        <h3>Approve Dietitians</h3>
-                        <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">
-                            <?= $pendingDietitians ?> pending verification
-                        </p>
                     </a>
 
-                    <!-- Food Database Card -->
-                    <a href="#" class="admin-hub-card card-food">
-                        <div class="icon-wrapper icon-orange">
-                            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-                            </svg>
+                    <a href="dietitians.php?status=pending" style="text-decoration: none;">
+                        <div class="summary-card" style="padding: 20px 16px; border: 1px solid <?= ($pendingDietitians > 0) ? '#f39c12' : 'transparent' ?>; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <div class="summary-value" style="font-size: 26px; color: #f39c12;"><?= $pendingDietitians ?></div>
+                            <div class="summary-label" style="font-size: 13px; margin-top: 4px;">Pending Approvals</div>
                         </div>
-                        <h3>Food Database</h3>
-                        <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;"><?= $totalFoods ?> food items stored</p>
                     </a>
 
-                    <!-- Generate Reports Card -->
-                    <a href="../admin-generate-reports.html" class="admin-hub-card card-reports">
-                        <div class="icon-wrapper icon-purple">
-                            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <line x1="12" y1="18" x2="12" y2="12"></line>
-                                <line x1="8" y1="18" x2="8" y2="15"></line>
-                                <line x1="16" y1="18" x2="16" y2="15"></line>
-                            </svg>
+                    <a href="foods.php" style="text-decoration: none;">
+                        <div class="summary-card" style="padding: 20px 16px; border: 1px solid transparent; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <div class="summary-value text-orange" style="font-size: 26px;"><?= $totalFoods ?></div>
+                            <div class="summary-label" style="font-size: 13px; margin-top: 4px;">Food Database</div>
                         </div>
-                        <h3>Generate Reports</h3>
-                        <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">System & health summaries</p>
                     </a>
+
+                    <a href="reports.php" style="text-decoration: none;">
+                        <div class="summary-card" style="padding: 20px 16px; border: 1px solid transparent; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <div class="summary-value" style="font-size: 26px; color: #9b59b6;"><?= $totalMealPlans ?></div>
+                            <div class="summary-label" style="font-size: 13px; margin-top: 4px;">Meal Plans</div>
+                        </div>
+                    </a>
+
+                    <div class="summary-card" style="padding: 20px 16px;">
+                        <div class="summary-value" style="font-size: 26px; color: var(--text-light);"><?= $totalAccounts ?></div>
+                        <div class="summary-label" style="font-size: 13px; margin-top: 4px;">Total Accounts</div>
+                    </div>
 
                 </div>
+
+                <!-- Admin Action Hub Grid (Matching Existing Design) -->
+                <div class="admin-dashboard-grid" style="max-width: 100%; margin-bottom: 35px; gap: 20px;">
+                    <a href="users.php" class="admin-hub-card card-manage" style="padding: 35px 20px; border-radius: 20px;">
+                        <div class="icon-wrapper icon-green" style="width: 60px; height: 60px; margin-bottom: 14px;">
+                            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        </div>
+                        <h3 style="font-size: 18px;">Manage Users</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Search, activate, suspend, or delete</p>
+                    </a>
+
+                    <a href="dietitians.php" class="admin-hub-card card-approve" style="padding: 35px 20px; border-radius: 20px;">
+                        <div class="icon-wrapper icon-blue" style="width: 60px; height: 60px; margin-bottom: 14px;">
+                            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+                        </div>
+                        <h3 style="font-size: 18px;">Approve Dietitians</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Review credentials & certify applicants</p>
+                    </a>
+
+                    <a href="foods.php" class="admin-hub-card card-food" style="padding: 35px 20px; border-radius: 20px;">
+                        <div class="icon-wrapper icon-orange" style="width: 60px; height: 60px; margin-bottom: 14px;">
+                            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                        </div>
+                        <h3 style="font-size: 18px;">Food Database</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Nutrition facts, macros, & calories CRUD</p>
+                    </a>
+
+                    <a href="reports.php" class="admin-hub-card card-reports" style="padding: 35px 20px; border-radius: 20px;">
+                        <div class="icon-wrapper icon-purple" style="width: 60px; height: 60px; margin-bottom: 14px;">
+                            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="8" y1="18" x2="8" y2="15"></line><line x1="16" y1="18" x2="16" y2="15"></line></svg>
+                        </div>
+                        <h3 style="font-size: 18px;">System Reports</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Audit trails, activity charts & metrics</p>
+                    </a>
+                </div>
+
+                <!-- Recent Activity Split Grid -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    
+                    <!-- Left: Recent User Registrations -->
+                    <div class="panel-card" style="border-radius: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 class="panel-title" style="margin-bottom: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#2ecc71" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle></svg>
+                                Recent User Registrations
+                            </h3>
+                            <a href="users.php" style="color: var(--primary-orange); font-size: 12px; font-weight: 600; text-decoration: none;">View All &rarr;</a>
+                        </div>
+
+                        <?php if (empty($recentUsers)): ?>
+                            <p style="color: var(--text-muted); font-size: 13px;">No users registered yet.</p>
+                        <?php else: ?>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <?php foreach ($recentUsers as $ru): ?>
+                                    <div style="background-color: var(--bg-dark); border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div class="avatar" style="width: 34px; height: 34px; font-size: 12px;">
+                                                <?= strtoupper(substr($ru['name'], 0, 2)) ?>
+                                            </div>
+                                            <div>
+                                                <div style="font-size: 14px; font-weight: 600; color: var(--text-light);"><?= e($ru['name']) ?></div>
+                                                <div style="font-size: 12px; color: var(--text-muted);"><?= e($ru['email']) ?></div>
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <span class="status-badge status-<?= ($ru['status'] === 'active') ? 'active' : 'suspended' ?>" style="font-size: 11px; padding: 4px 8px;">
+                                                <?= ucfirst(e($ru['status'])) ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Right: Pending Dietitian Applications -->
+                    <div class="panel-card" style="border-radius: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 class="panel-title" style="margin-bottom: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#f39c12" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                Dietitian Applications
+                            </h3>
+                            <a href="dietitians.php" style="color: var(--primary-orange); font-size: 12px; font-weight: 600; text-decoration: none;">Review Queue &rarr;</a>
+                        </div>
+
+                        <?php if (empty($recentDietitians)): ?>
+                            <p style="color: var(--text-muted); font-size: 13px;">No dietitian applications yet.</p>
+                        <?php else: ?>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <?php foreach ($recentDietitians as $rd): ?>
+                                    <div style="background-color: var(--bg-dark); border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div class="avatar avatar-blue" style="width: 34px; height: 34px; font-size: 12px;">
+                                                <?= strtoupper(substr($rd['name'], 0, 2)) ?>
+                                            </div>
+                                            <div>
+                                                <div style="font-size: 14px; font-weight: 600; color: var(--text-light);"><?= e($rd['name']) ?></div>
+                                                <div style="font-size: 12px; color: var(--text-muted);"><?= e($rd['specialization'] ?? 'Dietetics') ?></div>
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <?php if ($rd['approval_status'] === 'approved'): ?>
+                                                <span class="status-badge status-active" style="font-size: 11px; padding: 4px 8px;">Approved</span>
+                                            <?php elseif ($rd['approval_status'] === 'rejected'): ?>
+                                                <span class="status-badge status-suspended" style="font-size: 11px; padding: 4px 8px;">Rejected</span>
+                                            <?php else: ?>
+                                                <span class="status-badge" style="background-color: rgba(243, 156, 18, 0.15); color: #f39c12; font-size: 11px; padding: 4px 8px;">Pending</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                </div>
+
             </div>
         </main>
     </div>

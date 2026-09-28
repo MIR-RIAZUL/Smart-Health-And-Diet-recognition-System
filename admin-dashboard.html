@@ -31,11 +31,11 @@
             </div>
 
             <nav class="sidebar-nav admin-nav">
-                <!-- Links mapped exactly to the design spelling and upcoming pages -->
-                <a href="admin-manage-users.html" class="nav-link admin-nav-link">Manage Users</a>
-                <a href="admin-approve-dietitians.html" class="nav-link admin-nav-link">Approve Dictitians</a>
-                <a href="#" class="nav-link admin-nav-link">Food Database</a>
-                <a href="admin-generate-reports.html" class="nav-link admin-nav-link">Generate reports</a>
+                <!-- Links mapped directly to the dynamic PHP backend modules -->
+                <a href="admin/users.php" class="nav-link admin-nav-link">Manage Users</a>
+                <a href="admin/dietitians.php" class="nav-link admin-nav-link">Approve Dietitians</a>
+                <a href="admin/foods.php" class="nav-link admin-nav-link">Food Database</a>
+                <a href="admin/reports.php" class="nav-link admin-nav-link">Generate reports</a>
             </nav>
         </aside>
 
@@ -44,7 +44,7 @@
             <div class="admin-dashboard-grid">
                 
                 <!-- Manage Users Card -->
-                <a href="admin-manage-users.html" class="admin-hub-card card-manage">
+                <a href="admin/users.php" class="admin-hub-card card-manage">
                     <div class="icon-wrapper icon-green">
                         <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -57,7 +57,7 @@
                 </a>
 
                 <!-- Approve Dietitians Card -->
-                <a href="admin-approve-dietitians.html" class="admin-hub-card card-approve">
+                <a href="admin/dietitians.php" class="admin-hub-card card-approve">
                     <div class="icon-wrapper icon-blue">
                         <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -65,11 +65,11 @@
                             <polyline points="16 11 18 13 22 9"></polyline>
                         </svg>
                     </div>
-                    <h3>Approve Dictitians</h3>
+                    <h3>Approve Dietitians</h3>
                 </a>
 
                 <!-- Food Database Card -->
-                <a href="#" class="admin-hub-card card-food">
+                <a href="admin/foods.php" class="admin-hub-card card-food">
                     <div class="icon-wrapper icon-orange">
                         <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
@@ -81,7 +81,7 @@
                 </a>
 
                 <!-- Generate Reports Card -->
-                <a href="admin-generate-reports.html" class="admin-hub-card card-reports">
+                <a href="admin/reports.php" class="admin-hub-card card-reports">
                     <div class="icon-wrapper icon-purple">
                         <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -91,7 +91,7 @@
                             <line x1="16" y1="18" x2="16" y2="15"></line>
                         </svg>
                     </div>
-                    <h3>Generate reports</h3>
+                    <h3>Generate Reports</h3>
                 </a>
 
             </div>

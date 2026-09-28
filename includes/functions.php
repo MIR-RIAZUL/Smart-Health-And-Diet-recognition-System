@@ -178,3 +178,29 @@ function getBasePath(): string {
     }
     return '';
 }
+
+/**
+ * Generate or get existing CSRF token.
+ *
+ * @return string
+ */
+function getCSRFToken(): string {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+/**
+ * Validate submitted CSRF token.
+ *
+ * @param string|null $token
+ * @return bool
+ */
+function validateCSRFToken(?string $token): bool {
+    if (empty($token) || empty($_SESSION['csrf_token'])) {
+        return false;
+    }
+    return hash_equals($_SESSION['csrf_token'], $token);
+}
+

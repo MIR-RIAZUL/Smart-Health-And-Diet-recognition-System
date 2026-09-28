@@ -53,9 +53,9 @@ CREATE TABLE IF NOT EXISTS `health_profiles` (
     `gender` ENUM('male', 'female', 'other') NULL,
     `height` DECIMAL(5,2) NULL, -- in cm
     `weight` DECIMAL(5,2) NULL, -- in kg
-    `activity_level` ENUM('sedentary', 'light', 'moderate', 'very_active', 'extra_active') DEFAULT 'sedentary',
-    `health_goal` ENUM('weight_loss', 'weight_gain', 'maintain_weight', 'general_fitness') DEFAULT 'maintain_weight',
-    `dietary_preference` ENUM('anything', 'vegetarian', 'vegan', 'keto', 'halal', 'paleo') DEFAULT 'anything',
+    `activity_level` VARCHAR(100) DEFAULT 'moderate',
+    `health_goal` VARCHAR(100) DEFAULT 'maintain_weight',
+    `dietary_preference` VARCHAR(100) DEFAULT 'anything',
     `daily_calorie_target` INT NULL DEFAULT 2000,
     `bmi` DECIMAL(4,1) NULL,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -233,7 +233,7 @@ INSERT INTO `users` (`id`, `name`, `email`, `password`, `phone`, `role`, `status
 (1, 'System Administrator', 'admin@healthtrack.com', '$2y$10$eUIqT3R6StKa/6rVD7FxTOV33nUL/13oXzZ/9YQXaaDg0DTTpGkPe', '+1234567890', 'admin', 'active'),
 (2, 'Dr. Sarah Miller', 'sarah@healthtrack.com', '$2y$10$5M8yvWqUe4yCg5eKevwz1eGfqR6r4Uq.hXJ5G3xVv9iRzO0G6aD72', '+1987654321', 'dietitian', 'active'),
 (3, 'Dr. James Wilson', 'james@healthtrack.com', '$2y$10$5M8yvWqUe4yCg5eKevwz1eGfqR6r4Uq.hXJ5G3xVv9iRzO0G6aD72', '+1555123456', 'dietitian', 'pending'),
-(4, 'Alice Johnson', 'alice@example.com', '$2y$10$sV6rNQq3T59aWf2JveRkWe3iO3t2Fm/Q3K6zL2p6Q0o1L8vR2bJce', '+1444555666', 'user', 'active')
+(4, 'Alice Johnson', 'alice@example.com', '$2y$10$v9A.nie1.e.rAFwgyVy.KOYVE97esAkMOwweb9/dWF1DLrUEe/3Zq', '+1444555666', 'user', 'active')
 ON DUPLICATE KEY UPDATE `id`=`id`;
 
 -- Dietitian profile for Dr. Sarah Miller (Approved)

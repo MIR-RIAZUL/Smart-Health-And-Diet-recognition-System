@@ -50,8 +50,7 @@
 
                 <h1 class="welcome-text">Wellcome!</h1>
 
-                <!-- Removed static action attribute, added ID for JavaScript -->
-                <form class="login-form" id="loginForm">
+                <form class="login-form" method="POST" action="login.php">
                     <div class="input-group">
                         <label for="email">Email</label>
                         <input type="email" id="email" name="email" required>
@@ -62,7 +61,7 @@
                     </div>
                     
                     <div class="forgot-password">
-                        <a href="reset-password.html">Fotgot Passwor?</a>
+                        <a href="reset-password.html">Forgot Password?</a>
                     </div>
                     
                     <button type="submit" class="login-btn">Log in</button>
@@ -88,32 +87,10 @@
                 </div>
 
                 <div class="create-account">
-                    <a href="sign-up.html">Create Account</a>
+                    <a href="register.php">Create Account</a>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Script to handle routing based on email -->
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent standard page reload
-            
-            const emailValue = document.getElementById('email').value.toLowerCase();
-            
-            // Route to Admin Dashboard
-            if (emailValue.includes('admin')) {
-                window.location.href = 'admin-dashboard.html';
-            } 
-            // Route to Dietitian Dashboard
-            else if (emailValue.includes('dr') || emailValue.includes('dietitian')) {
-                window.location.href = 'dietitian-dashboard.html';
-            } 
-            // Route to Standard User Dashboard
-            else {
-                window.location.href = 'user-health-info.html';
-            }
-        });
-    </script>
 </body>
 </html>

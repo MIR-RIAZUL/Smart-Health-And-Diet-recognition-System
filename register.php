@@ -2,10 +2,9 @@
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/auth.php';
 
-// Redirect if already logged in
-if (isLoggedIn()) {
-    redirectByRole($_SESSION['user_role'] ?? 'user');
-}
+// Check if already logged in
+$alreadyLoggedIn = isLoggedIn();
+$loggedInUser = $alreadyLoggedIn ? getCurrentUser() : null;
 
 $error = '';
 $fullname = '';
@@ -87,7 +86,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $pdo->commit();
 
-                // Log in user and redirect
+                // If a user was previously logged in, reset the session for the new account
+                if ($alreadyLoggedIn) {
+                    logoutUser();
+                }
+
+                // Log in newly created user
                 $newUserRecord = [
                     'id'    => $newUserId,
                     'name'  => $fullname,
@@ -100,8 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     setFlashMessage('info', 'Your dietitian registration was received and is pending admin approval.');
                     header("Location: dietitian/pending.php");
                 } else {
-                    setFlashMessage('success', 'Account created successfully! Welcome to Health Track.');
-                    header("Location: user/dashboard.php");
+                    setFlashMessage('success', 'Account created successfully! Welcome to Health Track. Please enter your health information.');
+                    header("Location: user/health-info.php");
                 }
                 exit;
 
@@ -178,6 +182,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php if (!empty($error)): ?>
                     <div style="background-color: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; padding: 14px 18px; border-radius: 12px; margin-bottom: 24px; font-size: 14px; font-weight: 500;">
                         <?= e($error) ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($alreadyLoggedIn && $loggedInUser): ?>
+                    <div style="background-color: rgba(242, 80, 12, 0.12); border: 1px solid rgba(242, 80, 12, 0.4); border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; font-size: 13px; color: #f0f2f5;">
+                        <span style="color: #f2500c; font-weight: 600;">Note:</span> You are currently signed in as <strong><?= e($loggedInUser['name']) ?></strong> (<?= e(ucfirst($loggedInUser['role'])) ?>).
+                        <div style="margin-top: 8px; display: flex; gap: 12px; align-items: center;">
+                            <a href="<?= ($loggedInUser['role'] === 'admin') ? 'admin/dashboard.php' : (($loggedInUser['role'] === 'dietitian') ? 'dietitian/dashboard.php' : 'user/dashboard.php') ?>" style="color: #f2500c; font-weight: 600; text-decoration: underline;">Go to Dashboard</a>
+                            <span style="color: #606470;">•</span>
+                            <a href="logout.php?redirect=register.php" style="color: #b0b4bd; text-decoration: underline;">Sign Out</a>
+                        </div>
                     </div>
                 <?php endif; ?>
 
