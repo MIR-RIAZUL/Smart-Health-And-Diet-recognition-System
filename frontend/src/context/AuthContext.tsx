@@ -33,10 +33,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const hydrateSession = () => {
-      let nextUser = defaultUser;
+      let nextUser: UserSession | null = null;
 
       try {
+        const isLoggedOut = localStorage.getItem("healthtrack_logged_out") === "true";
         const stored = localStorage.getItem("healthtrack_user");
+
         if (stored) {
           const parsed = JSON.parse(stored) as Partial<UserSession>;
           if (
@@ -48,7 +50,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ) {
             nextUser = parsed as UserSession;
           }
-        } else {
+        } else if (!isLoggedOut) {
+          // Fresh demo session seeding
+          nextUser = defaultUser;
           localStorage.setItem("healthtrack_user", JSON.stringify(defaultUser));
         }
       } catch {
@@ -108,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setUser(matchedUser);
+    localStorage.removeItem("healthtrack_logged_out");
     localStorage.setItem("healthtrack_user", JSON.stringify(matchedUser));
     setLoading(false);
     return true;
@@ -123,12 +128,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       newUser = { id: 4, name: "Alice Johnson", email: "alice@example.com", role: "user", status: "active" };
     }
     setUser(newUser);
+    localStorage.removeItem("healthtrack_logged_out");
     localStorage.setItem("healthtrack_user", JSON.stringify(newUser));
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("healthtrack_user");
+    localStorage.setItem("healthtrack_logged_out", "true");
   };
 
   return (

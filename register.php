@@ -122,9 +122,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Create an account on Health Track - Smart Health & AI Diet Recognition System. Personalized nutrition, macro logs, and certified dietitians.">
     <title>Health Track - Create Account</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="split-layout">
@@ -168,30 +169,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </a>
 
                 <div class="logo-container small-logo">
-                    <div class="filled-heart-icon" style="background-color: #f2500c; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                        <svg viewBox="0 0 24 24" fill="white" width="18" height="18">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                    </div>
-                    <span class="logo-text-small" style="font-size: 20px; color: white;">Health Track</span>
+                    <svg class="heart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        <path d="M12 8v6M9 11h6" stroke-linecap="round"/>
+                    </svg>
+                    <span class="logo-text-small" style="font-size: 22px; font-weight: 700; color: white;">Health Track</span>
                 </div>
 
                 <h1 class="page-title">Create account</h1>
                 <p class="form-subtitle">Join thousands on their health journey</p>
 
                 <?php if (!empty($error)): ?>
-                    <div style="background-color: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; padding: 14px 18px; border-radius: 12px; margin-bottom: 24px; font-size: 14px; font-weight: 500;">
-                        <?= e($error) ?>
+                    <div style="background: rgba(231, 76, 60, 0.15); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(231, 76, 60, 0.4); color: #ff6b6b; padding: 14px 18px; border-radius: 14px; margin-bottom: 24px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <span><?= e($error) ?></span>
                     </div>
                 <?php endif; ?>
 
                 <?php if ($alreadyLoggedIn && $loggedInUser): ?>
-                    <div style="background-color: rgba(242, 80, 12, 0.12); border: 1px solid rgba(242, 80, 12, 0.4); border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; font-size: 13px; color: #f0f2f5;">
-                        <span style="color: #f2500c; font-weight: 600;">Note:</span> You are currently signed in as <strong><?= e($loggedInUser['name']) ?></strong> (<?= e(ucfirst($loggedInUser['role'])) ?>).
-                        <div style="margin-top: 8px; display: flex; gap: 12px; align-items: center;">
-                            <a href="<?= ($loggedInUser['role'] === 'admin') ? 'admin/dashboard.php' : (($loggedInUser['role'] === 'dietitian') ? 'dietitian/dashboard.php' : 'user/dashboard.php') ?>" style="color: #f2500c; font-weight: 600; text-decoration: underline;">Go to Dashboard</a>
+                    <div style="background: rgba(242, 80, 12, 0.1); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(242, 80, 12, 0.35); border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; font-size: 13px; color: #f0f2f5;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #f2500c; box-shadow: 0 0 8px #f2500c;"></span>
+                            <span style="color: #ff6b35; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">Active Session</span>
+                        </div>
+                        <p style="margin-top: 6px; color: #d0d4dc;">
+                            <span style="color: #f2500c; font-weight: 600;">Note:</span> You are currently signed in as <strong><?= e($loggedInUser['name']) ?></strong> (<?= e(ucfirst($loggedInUser['role'])) ?>).
+                        </p>
+                        <div style="margin-top: 10px; display: flex; gap: 14px; align-items: center; font-size: 13px;">
+                            <a href="<?= ($loggedInUser['role'] === 'admin') ? 'admin/dashboard.php' : (($loggedInUser['role'] === 'dietitian') ? 'dietitian/dashboard.php' : 'user/dashboard.php') ?>" style="color: #ff6b35; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                Go to Dashboard &rarr;
+                            </a>
                             <span style="color: #606470;">•</span>
-                            <a href="logout.php?redirect=register.php" style="color: #b0b4bd; text-decoration: underline;">Sign Out</a>
+                            <a href="logout.php?redirect=register.php" style="color: #b0b4bd; text-decoration: none; hover:underline;">Sign Out</a>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -200,27 +213,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="input-row">
                         <div class="input-group">
                             <label for="fullname">Full Name *</label>
-                            <input type="text" id="fullname" name="fullname" value="<?= e($fullname) ?>" placeholder="e.g. John Doe" required>
+                            <input type="text" id="fullname" name="fullname" value="<?= e($fullname) ?>" placeholder="e.g. John Doe" required autocomplete="name">
                         </div>
                         <div class="input-group">
                             <label for="phone">Phone</label>
-                            <input type="tel" id="phone" name="phone" value="<?= e($phone) ?>" placeholder="e.g. +1 234 567 8900">
+                            <input type="tel" id="phone" name="phone" value="<?= e($phone) ?>" placeholder="e.g. +1 234 567 8900" autocomplete="tel">
                         </div>
                     </div>
                     
                     <div class="input-group">
                         <label for="email">Email address *</label>
-                        <input type="email" id="email" name="email" value="<?= e($email) ?>" placeholder="name@example.com" required>
+                        <input type="email" id="email" name="email" value="<?= e($email) ?>" placeholder="name@example.com" required autocomplete="email">
                     </div>
                     
                     <div class="input-row">
                         <div class="input-group">
                             <label for="password">Password *</label>
-                            <input type="password" id="password" name="password" placeholder="At least 6 characters" required>
+                            <input type="password" id="password" name="password" placeholder="At least 6 characters" required autocomplete="new-password">
                         </div>
                         <div class="input-group">
                             <label for="confirm_password">Confirm Password *</label>
-                            <input type="password" id="confirm_password" name="confirm_password" placeholder="Repeat password" required>
+                            <input type="password" id="confirm_password" name="confirm_password" placeholder="Repeat password" required autocomplete="new-password">
                         </div>
                     </div>
 
@@ -239,7 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <!-- Additional Dietitian specific fields (shown only if Dietitian role is selected) -->
-                    <div id="dietitianExtraFields" style="display: <?= ($role === 'dietitian') ? 'block' : 'none' ?>; margin-bottom: 20px;">
+                    <div id="dietitianExtraFields" style="display: <?= ($role === 'dietitian') ? 'block' : 'none' ?>; margin-bottom: 20px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 18px 16px;">
                         <div class="input-row">
                             <div class="input-group">
                                 <label for="qualification">Qualifications / Degree</label>
@@ -250,7 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <input type="text" id="specialization" name="specialization" value="<?= e($specialization) ?>" placeholder="e.g. Sports Nutrition, Diabetes">
                             </div>
                         </div>
-                        <p style="font-size: 12px; color: #8c909a; margin-top: -10px;">
+                        <p style="font-size: 12px; color: #8c909a; margin-top: 8px;">
                             Note: Dietitian accounts are subject to administrative review before being enabled.
                         </p>
                     </div>

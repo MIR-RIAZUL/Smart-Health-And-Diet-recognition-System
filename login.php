@@ -42,9 +42,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sign in to Health Track - Your Smart Health & AI Diet Recognition System. Monitor nutrition, track daily calories, and consult dietitians.">
     <title>Health Track - Sign In</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="split-layout">
@@ -80,12 +81,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="right-panel">
             <div class="login-container">
                 <div class="logo-container small-logo">
-                    <div class="filled-heart-icon" style="background-color: #f2500c; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                        <svg viewBox="0 0 24 24" fill="white" width="18" height="18">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                    </div>
-                    <h2 class="logo-text" style="font-size: 24px; color: white;">Health Track</h2>
+                    <svg class="heart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        <path d="M12 8v6M9 11h6" stroke-linecap="round"/>
+                    </svg>
+                    <h2 class="logo-text">Health Track</h2>
                 </div>
 
                 <h1 class="welcome-text">Welcome!</h1>
@@ -93,19 +93,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php renderFlashMessage(); ?>
 
                 <?php if (!empty($error)): ?>
-                    <div style="background-color: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; padding: 14px 18px; border-radius: 12px; margin-bottom: 24px; font-size: 14px; font-weight: 500;">
-                        <?= e($error) ?>
+                    <div style="background: rgba(231, 76, 60, 0.15); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(231, 76, 60, 0.4); color: #ff6b6b; padding: 14px 18px; border-radius: 14px; margin-bottom: 24px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <span><?= e($error) ?></span>
                     </div>
                 <?php endif; ?>
 
-                <form class="login-form" method="POST" action="login.php">
+                <form class="login-form" method="POST" action="login.php" id="loginForm">
                     <div class="input-group">
                         <label for="email">Email</label>
-                        <input type="email" id="email" name="email" value="<?= e($_POST['email'] ?? '') ?>" placeholder="name@example.com" required>
+                        <input type="email" id="email" name="email" value="<?= e($_POST['email'] ?? '') ?>" placeholder="name@example.com" required autocomplete="email">
                     </div>
                     <div class="input-group">
                         <label for="password">Password</label>
-                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
                     </div>
                     
                     <div class="forgot-password">
@@ -120,16 +125,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <a href="register.php">Create Account</a>
                 </div>
 
-                <!-- Viva / Quick Demo Credentials Box -->
-                <div style="margin-top: 30px; padding: 16px; background-color: #1a1d24; border: 1px solid #2a2f3a; border-radius: 12px; font-size: 12px; color: #8c909a;">
-                    <div style="font-weight: 600; color: #ffffff; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Demo Accounts (Pre-configured):</div>
-                    <div><strong style="color: #2ecc71;">Admin:</strong> admin@healthtrack.com / admin123</div>
-                    <div><strong style="color: #3498db;">Approved Dietitian:</strong> sarah@healthtrack.com / dietitian123</div>
-                    <div><strong style="color: #f39c12;">Pending Dietitian:</strong> james@healthtrack.com / dietitian123</div>
-                    <div><strong style="color: #f2500c;">User:</strong> alice@example.com / user123</div>
+                <!-- Glassmorphic 1-Click Demo Credentials Box -->
+                <div style="margin-top: 30px; padding: 18px 20px; background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <span style="font-weight: 700; color: #ffffff; font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; display: flex; align-items: center; gap: 6px;">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: #2ecc71; box-shadow: 0 0 8px #2ecc71;"></span>
+                            Instant Demo Credentials
+                        </span>
+                        <span style="font-size: 11px; color: #8c909a;">Click to Auto-fill</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                        <button type="button" onclick="fillDemo('admin@healthtrack.com', 'admin123')" style="background: rgba(46, 204, 113, 0.1); border: 1px solid rgba(46, 204, 113, 0.25); color: #2ecc71; padding: 8px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left; transition: all 0.2s ease;">
+                            🛡️ Admin
+                        </button>
+                        <button type="button" onclick="fillDemo('sarah@healthtrack.com', 'dietitian123')" style="background: rgba(52, 152, 219, 0.1); border: 1px solid rgba(52, 152, 219, 0.25); color: #3498db; padding: 8px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left; transition: all 0.2s ease;">
+                            🩺 Dietitian
+                        </button>
+                        <button type="button" onclick="fillDemo('alice@example.com', 'user123')" style="background: rgba(242, 80, 12, 0.1); border: 1px solid rgba(242, 80, 12, 0.25); color: #ff6b35; padding: 8px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left; transition: all 0.2s ease;">
+                            👤 Patient (Alice)
+                        </button>
+                        <button type="button" onclick="fillDemo('james@healthtrack.com', 'dietitian123')" style="background: rgba(243, 156, 18, 0.1); border: 1px solid rgba(243, 156, 18, 0.25); color: #f39c12; padding: 8px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left; transition: all 0.2s ease;">
+                            ⏳ Pending Dietitian
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        function fillDemo(email, password) {
+            const emailInput = document.getElementById('email');
+            const passInput = document.getElementById('password');
+            emailInput.value = email;
+            passInput.value = password;
+            
+            // Visual pulse feedback on input fields
+            [emailInput, passInput].forEach(el => {
+                el.style.borderColor = '#f2500c';
+                el.style.boxShadow = '0 0 15px rgba(242, 80, 12, 0.3)';
+                setTimeout(() => {
+                    el.style.borderColor = '';
+                    el.style.boxShadow = '';
+                }, 400);
+            });
+        }
+    </script>
 </body>
 </html>
